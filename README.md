@@ -2,6 +2,8 @@
 
 > Your reliable sentinel for academic literature.
 
+<img src="./assets/lavender.jpg" alt="LavenderSentinel" width="400">
+
 LavenderSentinel is a system that automatically collects research papers based on keywords, then encodes, indexes, and summarizes them. It provides an optimized responsive Web UI with a side-panel designed for deep LLM-assisted conversation.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
