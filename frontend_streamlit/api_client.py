@@ -115,3 +115,4 @@ def get_api_client() -> APIClient:
     """Get cached API client instance."""
     return APIClient()
 
+

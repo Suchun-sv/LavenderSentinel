@@ -45,3 +45,4 @@ elif page == "💬 Chat":
 st.sidebar.divider()
 st.sidebar.caption("LavenderSentinel v0.1.0")
 
+
