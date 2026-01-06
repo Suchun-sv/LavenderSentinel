@@ -9,12 +9,15 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Install uv
+RUN pip install uv
+
 # Copy project files
 COPY pyproject.toml ./
 COPY app ./app
 
-# Install Python dependencies
-RUN pip install --no-cache-dir .
+# Install Python dependencies using uv
+RUN uv pip install --system .
 
 # Expose port
 EXPOSE 8000

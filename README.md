@@ -1,4 +1,4 @@
-#  🪻 LavenderSentinel
+#  🪻 Lavender Paper Sentinel
 > Your reliable sentinel for academic literature.
  
 <img src="./assets/lavender.jpg" alt="LavenderSentinel" width="400">
@@ -74,19 +74,20 @@ docker-compose up -d
 
 ### Manual Setup
 
-**Backend:**
+**Backend (using uv):**
 
 ```bash
+# Install uv (if not installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
 cd backend
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+# Create virtual environment and install dependencies
+uv venv
+source .venv/bin/activate  # or `.venv\Scripts\activate` on Windows
+uv pip install -e ".[dev]"
 
-# Install dependencies
-pip install -e .
-
-# Set environment variables (copy from .env.example)
+# Set environment variables
 cp .env.example .env
 # Edit .env with your configuration
 
@@ -99,12 +100,18 @@ uvicorn app.main:app --reload
 ```bash
 cd frontend
 
-# Install dependencies
+# Clean install (if having issues)
+rm -rf node_modules package-lock.json
+npm install
+
+# Or just install
 npm install
 
 # Run development server
 npm run dev
 ```
+
+The frontend will be available at http://localhost:5173
 
 ## 📁 Project Structure
 
