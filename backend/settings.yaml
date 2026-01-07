@@ -1,0 +1,25 @@
+# currently only support arXiv
+source_list: 
+  - name: arXiv
+
+keywords:
+  - "vector database"
+  - "RAG"
+  - "agent"
+
+paper_save_path: "cache/papers/"
+
+chat_litellm:
+  model: "gpt-4o-mini"
+  api_key: "XXXXX"
+  api_base: "https://api.openai.com/v1"
+
+
+embedding_save_path: "cache/embeddings/"
+
+# qdrant
+qdrant_database:
+  host: "localhost"
+  port: 6333
+  collection: "lavender_papers"
+

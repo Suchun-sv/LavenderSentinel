@@ -1,0 +1,60 @@
+import arxiv
+from ..model.paper import Paper
+from ..config import settings
+
+from typing import List, Tuple
+from datetime import datetime
+
+class ArxivClient:
+    def __init__(self):
+        self.arxiv_client = arxiv.Client(
+            page_size=100,
+            delay_seconds=1,
+            num_retries=3,
+        )
+
+    def search_papers(self, keywords: List[str], date_range: Tuple[datetime, datetime]) -> List[Paper]:
+        """
+        Result(
+        entry_id: str,
+        updated: datetime.datetime = datetime.datetime(1, 1, 1, 0, 0),
+        published: datetime.datetime = datetime.datetime(1, 1, 1, 0, 0),
+        title: str = '',
+        authors: list[Result.Author] | None = None,
+        summary: str = '',
+        comment: str = '',
+        journal_ref: str = '',
+        doi: str = '',
+        primary_category: str = '',
+        categories: list[str] | None = None,
+        links: list[Result.Link] | None = None,
+        _raw: feedparser.util.FeedParserDict | None = None
+    )
+        """
+        search_query = arxiv.Search(
+            query=keywords,
+            max_results=100,
+            sort_by=arxiv.SortCriterion.Relevance,
+            sort_order=arxiv.SortOrder.Descending,
+        )
+        results = self.arxiv_client.results(search_query)
+        return [self._arxiv_result_to_paper(result) for result in results]
+    
+    def _arxiv_result_to_paper(self, result: arxiv.Result) -> Paper:
+        return Paper(
+            title=result.title,
+            abstract=result.summary,
+            authors=[author.name for author in result.authors],
+            links=[link.href for link in result.links],
+
+            arxiv_entry_id=result.entry_id,
+            arxiv_updated=result.updated,
+            arxiv_published=result.published,
+            arxiv_authors=[author.name for author in result.authors],
+            arxiv_links=[link.href for link in result.links],
+            arxiv_comment=result.comment,
+            arxiv_journal_ref=result.journal_ref,
+            arxiv_doi=result.doi,
+            arxiv_primary_category=result.primary_category,
+            arxiv_categories=result.categories,
+        )
