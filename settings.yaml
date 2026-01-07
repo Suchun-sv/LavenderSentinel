@@ -1,13 +1,14 @@
 # currently only support arXiv
+language: "中文（简体）！！！"
 source_list: 
-  - name: arXiv
+  - arXiv
 
 keywords:
   - "vector database"
   - "RAG"
   - "agent"
 
-paper_save_path: "cache/papers/"
+paper_save_path: "cache/papers.json"
 
 
 chat_litellm:

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Any
 
 from ..model.paper import Paper
 
@@ -43,6 +43,10 @@ class JsonStore:
 
         with self.save_path.open("w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
+        
+    
+    def get_all_papers(self) -> List[Paper]:
+        return self._load_papers()
 
     # --------- 仅新增逻辑 --------- #
 
@@ -73,3 +77,21 @@ class JsonStore:
 
         self._save_papers(existing)
         return inserted_papers
+    
+    def update_paper_field(self, id: str, field: str, value: Any) -> None:
+        papers = self._load_papers()
+        # assert if filed is a valid field of Paper
+        assert field in Paper.__fields__, f"Field {field} is not a valid field of Paper"
+        
+        for p in papers:
+            if p.id == id:
+                setattr(p, field, value)
+                break
+        self._save_papers(papers)
+    
+    def get_paper_by_id(self, id: str) -> Paper:
+        papers = self._load_papers()
+        for p in papers:
+            if p.id == id:
+                return p
+        return None

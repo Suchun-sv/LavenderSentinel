@@ -35,6 +35,7 @@ class PdfDownloadConfig(BaseModel):
 
 
 class Settings(BaseSettings):
+    language: Annotated[str, Field(default="en")]
     source_list: Annotated[List[str], Field(default=["arXiv"])]
     keywords: Annotated[List[str], Field(default=["vector database", "RAG", "agent"])]
 

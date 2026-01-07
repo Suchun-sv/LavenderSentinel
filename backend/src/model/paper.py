@@ -17,15 +17,17 @@ class Paper(BaseModel):
     authors: List[str] = Field(default_factory=list)
     keywords: List[str] = Field(default_factory=list)
     pdf_url: Optional[str] = None
+    full_text: Optional[str] = None
 
     # links: List[HttpUrl] = Field(default_factory=list)
     # pdf_url: Optional[HttpUrl] = None
 
     # AI 生成字段
+    ai_abstract: Optional[str] = None
+    ai_abstract_provider: Optional[str] = None
     ai_summary: Optional[str] = None
     ai_embedding_doc: Optional[str] = None
     ai_summary_provider: Optional[str] = None
-    ai_embedding_doc_provider: Optional[str] = None
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
