@@ -1,17 +1,7 @@
-FROM node:20-alpine
+# 前端 Docker 镜像配置
+#
+# 构建: docker build -t lavender-frontend .
+# 运行: docker run -p 8501:8501 lavender-frontend
 
-WORKDIR /app
-
-# Install dependencies
-COPY package.json package-lock.json* ./
-RUN npm install
-
-# Copy application code
-COPY . .
-
-# Expose port
-EXPOSE 5173
-
-# Run the development server
-CMD ["npm", "run", "dev", "--", "--host"]
+# TODO: 添加 Dockerfile 内容
 

@@ -1,48 +1,94 @@
-# Development Docker Compose with debugging support
-# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# docker-compose.dev.yml
+# 开发环境基础设施：Redis, PostgreSQL, Qdrant
+# 启动: docker compose -f docker-compose.dev.yml up -d
+# 停止: docker compose -f docker-compose.dev.yml down
+# 清理数据: docker compose -f docker-compose.dev.yml down -v
 
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    container_name: lavender-backend-dev
-    ports:
-      - "8000:8000"
-      - "5678:5678"  # debugpy port
+  # ============================================
+  # PostgreSQL - 关系型数据库，存储论文元数据
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: lavender-postgres
+    restart: unless-stopped
     environment:
-      - ENVIRONMENT=development
-      - DEBUG=true
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/lavender_sentinel
-      - COCOINDEX_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/lavender_sentinel
-      - REDIS_URL=redis://redis:6379/0
-      - QDRANT_HOST=qdrant
-      - QDRANT_PORT=6333
-      - PYTHONDONTWRITEBYTECODE=1
-      - PYTHONUNBUFFERED=1
+      POSTGRES_USER: lavender
+      POSTGRES_PASSWORD: lavender_dev_password
+      POSTGRES_DB: lavender_sentinel
+    ports:
+      - "5432:5432"
     volumes:
-      - ./backend:/app
-      - backend_cache:/root/.cache
-    command: python -m debugpy --listen 0.0.0.0:5678 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    stdin_open: true
-    tty: true
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lavender -d lavender_sentinel"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  frontend:
-    container_name: lavender-frontend-dev
+  # ============================================
+  # Redis - 缓存 & 消息队列 (Celery broker)
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: lavender-redis
+    restart: unless-stopped
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_BASE_URL=http://localhost:8000/api/v1
-      - CHOKIDAR_USEPOLLING=true  # Better file watching in Docker
+      - "6379:6379"
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - frontend_cache:/app/.vite
-    stdin_open: true
-    tty: true
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Qdrant - 向量数据库，存储论文 embeddings
+  # ============================================
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: lavender-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"  # REST API
+      - "6334:6334"  # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  backend_cache:
-  frontend_cache:
+  postgres_data:
+    name: lavender_postgres_data
+  redis_data:
+    name: lavender_redis_data
+  qdrant_data:
+    name: lavender_qdrant_data
 
-
+# ============================================
+# 连接信息 (用于 backend/settings.yaml 或 .env)
+# ============================================
+# PostgreSQL:
+#   host: localhost
+#   port: 5432
+#   user: lavender
+#   password: lavender_dev_password
+#   database: lavender_sentinel
+#   URL: postgresql://lavender:lavender_dev_password@localhost:5432/lavender_sentinel
+#
+# Redis:
+#   host: localhost
+#   port: 6379
+#   URL: redis://localhost:6379/0
+#
+# Qdrant:
+#   host: localhost
+#   port: 6333 (REST) / 6334 (gRPC)
+#   URL: http://localhost:6333

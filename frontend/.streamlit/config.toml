@@ -1,0 +1,15 @@
+# Streamlit 配置文件
+#
+# 主题颜色、服务器设置等
+
+[server]
+port = 8501
+address = "0.0.0.0"
+
+[theme]
+primaryColor = "#8b5cf6"        # 薰衣草紫
+backgroundColor = "#fafafa"
+secondaryBackgroundColor = "#f5f3ff"
+
+# TODO: 完善配置
+
