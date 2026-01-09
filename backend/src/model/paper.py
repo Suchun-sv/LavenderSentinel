@@ -31,8 +31,8 @@ class Paper(BaseModel):
     ai_embedding_doc: Optional[str] = None
     ai_summary_provider: Optional[str] = None
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
     arxiv_entry_id: Optional[str] = None
     arxiv_updated: Optional[datetime] = None

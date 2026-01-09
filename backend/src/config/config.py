@@ -22,6 +22,10 @@ class CocoIndexConfig(BaseModel):
     embedding_api_key: Annotated[str, Field(default="sk-proj-xxxx")]
     embedding_api_base: Annotated[str, Field(default="https://api.openai.com/v1")]
 
+class SchedulerConfig(BaseModel):
+    enabled: Annotated[bool, Field(default=True)]
+    timezone: Annotated[str, Field(default="Asia/Shanghai")]
+    daily_arxiv_job: Annotated[str, Field(default="0 */1 * * *")]
 
 class QdrantConfig(BaseModel):
     host: Annotated[str, Field(default="localhost")]
@@ -39,6 +43,11 @@ class Settings(BaseSettings):
     source_list: Annotated[List[str], Field(default=["arXiv"])]
     keywords: Annotated[List[str], Field(default=["vector database", "RAG", "agent"])]
 
+    auto_ai_title: Annotated[bool, Field(default=True)]
+    auto_ai_abstract: Annotated[bool, Field(default=True)]
+
+    database_url: Annotated[str, Field(default="postgresql://postgres:postgres@localhost:5432/lavender_sentinel")]
+
     paper_save_path: Annotated[str, Field(default="cache/papers.json")]
     pdf_save_path: Annotated[str, Field(default="cache/pdfs/")]
     pdf_download: PdfDownloadConfig = Field(default_factory=PdfDownloadConfig)
@@ -47,6 +56,8 @@ class Settings(BaseSettings):
     chat_litellm: ChatLiteLLMConfig = Field(default_factory=ChatLiteLLMConfig)
     cocoindex: CocoIndexConfig = Field(default_factory=CocoIndexConfig)
     qdrant_database: QdrantConfig = Field(default_factory=QdrantConfig)
+
+    scheduler: SchedulerConfig = Field(default_factory=SchedulerConfig)
 
     model_config = SettingsConfigDict(
         env_file=".env",

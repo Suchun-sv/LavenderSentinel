@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_USER: lavender
       POSTGRES_PASSWORD: lavender_password
-      POSTGRES_DB: cocoindex
+      POSTGRES_DB: lavender_sentinel
     ports:
       - "5432:5432"
     volumes:

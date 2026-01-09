@@ -1,5 +1,14 @@
 # currently only support arXiv
 language: "中文（简体）！！！"
+
+auto_ai_title: true
+auto_ai_abstract: true
+
+scheduler:
+  enabled: true
+  timezone: "Asia/Shanghai"
+  daily_arxiv_job: "0 */1 * * *"
+
 source_list: 
   - arXiv
 
@@ -9,7 +18,6 @@ keywords:
   - "agent"
 
 paper_save_path: "cache/papers.json"
-
 
 chat_litellm:
   model: "gpt-4o-mini"
@@ -24,4 +32,3 @@ qdrant_database:
   host: "localhost"
   port: 6333
   collection: "lavender_papers"
-
