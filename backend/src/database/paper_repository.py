@@ -189,6 +189,22 @@ class PaperRepository:
             rows = query.all()
             return [Paper.model_validate(r.paper) for r in rows]
     
+    def update_ai_abstract(self, paper_id: str, ai_abstract: str, provider: str) -> None:
+        with SessionLocal() as db:
+            row = db.get(PaperRow, paper_id)
+            if not row:
+                return
+
+            paper = dict(row.paper)
+            paper["ai_abstract"] = ai_abstract
+            paper["ai_abstract_provider"] = provider
+            paper["updated_at"] = datetime.utcnow().isoformat()
+
+            row.paper = paper
+            row.updated_at = datetime.utcnow()
+
+            db.commit()
+    
     def list_missing_ai_title(self, limit: int = -1) -> List[Paper]:
         """
         List papers without ai_title.
@@ -205,40 +221,19 @@ class PaperRepository:
 
             rows = query.all()
             return [Paper.model_validate(r.paper) for r in rows]
-    
+        
     def update_ai_title(self, paper_id: str, ai_title: str, provider: str) -> None:
-        """
-        Update ai_title and its provider.
-        """
-        with SessionLocal() as db:
-            row = db.get(PaperRow, paper_id)
-            if not row:
-                return
-            row.paper["ai_title"] = ai_title
-            row.paper["ai_title_provider"] = provider
-            row.updated_at = datetime.utcnow()
-            db.commit()
-
-    def update_ai_abstract(
-        self,
-        paper_id: str,
-        ai_abstract: str,
-        provider: str,
-    ) -> None:
-        """
-        Update ai_abstract and its provider.
-        """
         with SessionLocal() as db:
             row = db.get(PaperRow, paper_id)
             if not row:
                 return
 
-            paper = dict(row.paper)
-            paper["ai_abstract"] = ai_abstract
-            paper["ai_abstract_provider"] = provider
+            paper = dict(row.paper)   # ⭐ 拷贝一份新的 dict
+            paper["ai_title"] = ai_title
+            paper["ai_title_provider"] = provider
             paper["updated_at"] = datetime.utcnow().isoformat()
 
-            row.paper = paper
+            row.paper = paper         # ⭐ 整体赋值（SQLAlchemy 能识别）
             row.updated_at = datetime.utcnow()
 
             db.commit()

@@ -173,10 +173,10 @@ def main():
 
         col_prev, col_page, col_next = st.columns([1, 2, 1])
         with col_prev:
-            if st.button("⬅️ 上一页") and st.session_state.current_page > 1:
+            if st.button("⬅️") and st.session_state.current_page > 1:
                 st.session_state.current_page -= 1
         with col_next:
-            if st.button("下一页 ➡️") and st.session_state.current_page < total_pages:
+            if st.button("➡️") and st.session_state.current_page < total_pages:
                 st.session_state.current_page += 1
         with col_page:
             st.markdown(
@@ -197,6 +197,8 @@ def main():
         with cols[i % 2]:
             with st.container(border=True):
                 st.markdown(f"### 📄 {p.title}")
+                if p.ai_title:
+                    st.caption(f"### 🤖 AI Title: {p.ai_title}")
 
                 meta_bits = []
                 year = _get_year(p)
@@ -212,8 +214,9 @@ def main():
                 if meta_bits:
                     st.caption(" · ".join(meta_bits))
 
-                abstract = p.abstract or ""
-                preview = abstract[:220] + ("…" if len(abstract) > 220 else "")
+                # abstract = p.abstract or ""
+                preview = p.ai_abstract or p.abstract or ""
+                # preview = abstract[:300] + ("…" if len(abstract) > 220 else "")
                 st.write(preview or "_(No abstract)_")
 
                 c1, c2 = st.columns([1, 1])
