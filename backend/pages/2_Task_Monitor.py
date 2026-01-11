@@ -86,7 +86,7 @@ def main():
     # 刷新按钮
     col_refresh, col_spacer = st.columns([1, 5])
     with col_refresh:
-        if st.button("🔄 刷新", use_container_width=True):
+        if st.button("🔄 刷新", width="stretch"):
             st.rerun()
     
     st.divider()
@@ -161,7 +161,7 @@ def main():
                     st.caption(f"触发器: `{trigger_str}`")
                 
                 with col_action:
-                    if st.button("▶️ 立即执行", key=f"run_{job.id}", use_container_width=True):
+                    if st.button("▶️ 立即执行", key=f"run_{job.id}", width="stretch"):
                         try:
                             job.func()
                             st.success("任务已触发")
@@ -219,7 +219,7 @@ def main():
                             st.caption(f"入队时间: {_format_datetime(job['enqueued_at'])}")
                         
                         with col3:
-                            if st.button("❌ 取消", key=f"cancel_{queue_type}_{job['job_id']}", use_container_width=True):
+                            if st.button("❌ 取消", key=f"cancel_{queue_type}_{job['job_id']}", width="stretch"):
                                 if cancel_job(job['job_id']):
                                     st.success("已取消")
                                     st.rerun()
@@ -305,7 +305,7 @@ def main():
                                     st.code(job['exc_info'], language="python")
                         
                         with col2:
-                            if st.button("🔄 重试", key=f"retry_{queue_type}_{job['job_id']}", use_container_width=True):
+                            if st.button("🔄 重试", key=f"retry_{queue_type}_{job['job_id']}", width="stretch"):
                                 result = retry_failed_job(job['job_id'])
                                 if result:
                                     st.success("已重新入队")

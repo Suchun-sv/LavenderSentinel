@@ -8,9 +8,9 @@ from src.service.llm_service import (
     init_litellm,
     translate_summary,
     summarize_long_markdown,
-    ask_paper_question,
-    PaperChatState,
 )
+from src.service.chat_service import ChatService, _convert_latex_format
+from src.database.chat_repository import ChatRepository
 from src.service.pdf_parser_service import extract_pdf_markdown
 from src.service.pdf_download_service import PdfDownloader
 from src.jobs.paper_summary_job import SummaryJobStatus
@@ -47,6 +47,11 @@ def get_scheduler() -> SchedulerService:
 def setup_llm():
     init_litellm()
     return True
+
+
+@st.cache_resource
+def get_chat_service() -> ChatService:
+    return ChatService()
 
 
 # ======================================================
@@ -115,6 +120,132 @@ def _render_favorite_dislike_section(paper, repo: PaperRepository, scheduler: Sc
                 repo.mark_disliked(paper.id)
                 st.info("已标记为不喜欢，在主列表中将默认隐藏")
                 st.rerun()
+
+
+def _render_chat_section(paper, repo: PaperRepository):
+    """Render the chat section with session management."""
+    chat_service = get_chat_service()
+    
+    st.markdown("#### 💬 Paper Chat Assistant")
+    
+    # 获取论文的所有会话
+    sessions = chat_service.get_sessions_by_paper(paper.id)
+    
+    # Session state for current session
+    if "current_chat_session_id" not in st.session_state:
+        st.session_state.current_chat_session_id = None
+    
+    # ---------- Session Management ----------
+    col_session, col_new = st.columns([3, 1])
+    
+    with col_session:
+        if sessions:
+            # 构建选项：session_id -> 显示文本
+            session_options = {s.id: s.title or f"会话 {s.created_at.strftime('%m/%d %H:%M')}" for s in sessions}
+            
+            # 当前选中的会话
+            current_session_id = st.session_state.current_chat_session_id
+            if current_session_id not in session_options:
+                # 默认选择最新的会话
+                current_session_id = sessions[0].id if sessions else None
+            
+            selected_session_id = st.selectbox(
+                "💬 选择会话",
+                options=list(session_options.keys()),
+                format_func=lambda x: session_options.get(x, "未知"),
+                index=list(session_options.keys()).index(current_session_id) if current_session_id in session_options else 0,
+                key="chat_session_selector",
+            )
+            
+            if selected_session_id != st.session_state.current_chat_session_id:
+                st.session_state.current_chat_session_id = selected_session_id
+                st.rerun()
+        else:
+            st.caption("📝 还没有聊天会话，点击右侧「新建会话」开始")
+            st.session_state.current_chat_session_id = None
+    
+    with col_new:
+        st.markdown("<div style='height: 28px'></div>", unsafe_allow_html=True)
+        if st.button("➕ 新建会话", width="stretch"):
+            # 创建新会话
+            new_session = chat_service.create_session(
+                paper_id=paper.id,
+                paper_title=paper.title,
+                paper_abstract=paper.ai_abstract or paper.abstract,
+                paper_full_text=paper.full_text,
+                paper_summary=paper.ai_summary,
+                language=Config.language,
+            )
+            st.session_state.current_chat_session_id = new_session.id
+            st.success("✅ 已创建新会话")
+            st.rerun()
+    
+    # ---------- Chat Messages ----------
+    current_session = None
+    if st.session_state.current_chat_session_id:
+        current_session = chat_service.get_session(st.session_state.current_chat_session_id)
+    
+    if current_session:
+        # 显示内容来源信息
+        if paper.full_text:
+            st.caption("📚 已注入论文全文")
+        elif paper.ai_summary:
+            st.caption("📋 已注入 AI 总结")
+        else:
+            st.caption("📝 已注入论文摘要")
+        
+        # 消息容器
+        chat_container = st.container(height=400)
+        
+        with chat_container:
+            # 显示消息（跳过 system 消息）
+            for msg in current_session.messages:
+                if msg.role == "system":
+                    continue  # 不显示 system prompt
+                
+                with st.chat_message(msg.role):
+                    # 转换 LaTeX 格式以正确渲染公式
+                    st.markdown(_convert_latex_format(msg.content))
+        
+        # 输入框 - 使用 session_state 保存输入
+        if "pending_chat_input" not in st.session_state:
+            st.session_state.pending_chat_input = None
+        
+        user_input = st.chat_input("输入你的问题...", key="chat_input")
+        
+        if user_input:
+            # 立即显示用户消息
+            with chat_container:
+                with st.chat_message("user"):
+                    st.write(user_input)
+                
+                # 流式显示 AI 回复（支持 markdown 渲染）
+                with st.chat_message("assistant"):
+                    response_placeholder = st.empty()
+                    full_response = ""
+                    
+                    for chunk in chat_service.ask_stream(current_session.id, user_input):
+                        full_response += chunk
+                        # 实时更新 markdown 渲染（转换 LaTeX 格式）
+                        response_placeholder.markdown(_convert_latex_format(full_response) + "▌")
+                    
+                    # 移除光标，显示最终结果
+                    response_placeholder.markdown(_convert_latex_format(full_response))
+            
+            # 刷新以更新会话列表（标题可能已更新）
+            st.rerun()
+        
+        # 删除会话按钮
+        st.markdown("---")
+        col_del, col_spacer = st.columns([1, 3])
+        with col_del:
+            if st.button("🗑️ 删除会话", type="secondary"):
+                chat_service.delete_session(current_session.id)
+                st.session_state.current_chat_session_id = None
+                st.success("✅ 会话已删除")
+                st.rerun()
+    else:
+        st.info("👆 请选择或新建一个会话开始聊天")
 
 
 def _add_paper_to_folder(paper_id: str, folder_name: str, repo: PaperRepository):
@@ -201,9 +332,9 @@ def main():
     with st.sidebar:
         st.markdown("### 🔗 快捷链接")
         arxiv_html_url = f"https://arxiv.org/html/{paper.id}"
-        st.link_button("🌐 arXiv HTML", arxiv_html_url, use_container_width=True)
-        st.link_button("📄 arXiv PDF", f"https://arxiv.org/pdf/{paper.id}.pdf", use_container_width=True)
-        st.link_button("📋 arXiv Abstract", f"https://arxiv.org/abs/{paper.id}", use_container_width=True)
+        st.link_button("🌐 arXiv HTML", arxiv_html_url, width="stretch")
+        st.link_button("📄 arXiv PDF", f"https://arxiv.org/pdf/{paper.id}.pdf", width="stretch")
+        st.link_button("📋 arXiv Abstract", f"https://arxiv.org/abs/{paper.id}", width="stretch")
         
         st.divider()
 
@@ -372,31 +503,7 @@ def main():
         st.divider()
 
         # ---------- CHAT ----------
-        st.markdown("#### 💬 Paper Chat Assistant")
-
-        if "chat_state" not in st.session_state:
-            st.session_state.chat_state = PaperChatState(
-                paper_title=paper.title,
-                paper_abstract=paper.ai_abstract or paper.abstract,
-                paper_full_summary=paper.ai_summary or "",
-            )
-
-        for msg in st.session_state.chat_state.history:
-            role_icon = "🧑" if msg["role"] == "user" else "🤖"
-            st.markdown(f"**{role_icon} {msg['role']}**: {msg['content']}")
-
-        user_q = st.text_area("你的问题：", key="qa_input")
-
-        if st.button("🚀 发送问题"):
-            if not st.session_state.chat_state.paper_full_summary:
-                st.error("❌ 需要先生成 AI Summary 才能问答")
-            else:
-                ask_paper_question(
-                    st.session_state.chat_state,
-                    user_q,
-                    language=Config.language,
-                )
-                st.rerun()
+        _render_chat_section(paper, repo)
 
     # ======================================================
     # RIGHT — CONTENT VIEWER (Tabs: Comic / HTML / PDF)
@@ -416,7 +523,7 @@ def main():
         # ---------- Tab: 漫画 ----------
         with tab_comic:
             if existing_comic:
-                st.image(str(existing_comic), use_container_width=True)
+                st.image(str(existing_comic), width="stretch")
             else:
                 # 显示漫画任务状态
                 comic_status = paper.comic_job_status

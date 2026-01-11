@@ -156,7 +156,7 @@ def _render_pagination(total: int, position: str = "top") -> int:
             "⬅ 上一页",
             key=f"prev_{position}",
             disabled=current_page <= 1,
-            use_container_width=True,
+            width="stretch",
             on_click=_go_prev_page,
         )
     
@@ -181,7 +181,7 @@ def _render_pagination(total: int, position: str = "top") -> int:
             "下一页 ➡",
             key=f"next_{position}",
             disabled=st.session_state.current_page >= total_pages,
-            use_container_width=True,
+            width="stretch",
             on_click=_go_next_page,
             args=(total_pages,),
         )
@@ -256,7 +256,7 @@ def main():
         if st.button(
             "📚 全部论文",
             key="folder_all",
-            use_container_width=True,
+            width="stretch",
             type="primary" if folder_filter is None else "secondary",
         ):
             st.session_state.folder_filter = None
@@ -272,14 +272,14 @@ def main():
                 if st.button(
                     f"⭐ {folder} ({folder_counts[folder]})",
                     key=f"folder_select_{folder}",
-                    use_container_width=True,
+                    width="stretch",
                     type=btn_type,
                 ):
                     st.session_state.folder_filter = folder
                     st.rerun()
 
             with col_manage:
-                with st.popover("⚙", use_container_width=True):
+                with st.popover("⚙", width="stretch"):
                     st.markdown(f"**管理「{folder}」**")
 
                     # 重命名
@@ -473,11 +473,11 @@ def main():
                     st.link_button(
                         "PDF",
                         f"https://arxiv.org/pdf/{p.id}.pdf",
-                        use_container_width=True,
+                        width="stretch",
                     )
                 with c3:
                     # 收藏夹快速操作
-                    with st.popover("⭐", use_container_width=True):
+                    with st.popover("⭐", width="stretch"):
                         st.markdown("**添加到收藏夹**")
                         # 已有收藏夹
                         if all_folders:
@@ -487,7 +487,7 @@ def main():
                                 if st.button(
                                     label,
                                     key=f"toggle_fav_{p.id}_{folder}",
-                                    use_container_width=True,
+                                    width="stretch",
                                 ):
                                     if is_in:
                                         repo.remove_from_folder(p.id, folder)
