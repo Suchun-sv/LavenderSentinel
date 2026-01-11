@@ -50,8 +50,18 @@ class PaperComicGenerator:
    - 第10格：总结和应用场景
 4. **表现**：用简洁的文字配合清晰的插图，让非专业人士也能理解
 
+请给我纯图片响应，不要返回任何文本。
+请给我纯图片响应，不要返回任何文本。
+请给我纯图片响应，不要返回任何文本。
+请给我纯图片响应，不要返回任何文本。
+
 ## 论文内容：
 {paper_content}
+
+请给我纯图片响应，不要返回任何文本。
+请给我纯图片响应，不要返回任何文本。
+请给我纯图片响应，不要返回任何文本。
+请给我纯图片响应，不要返回任何文本。
 """
 
     def __init__(self, api_key: Optional[str] = None):
@@ -104,7 +114,7 @@ class PaperComicGenerator:
         
         size = image_size or self.image_size
         generate_config = types.GenerateContentConfig(
-            response_modalities=["IMAGE", "TEXT"],
+            response_modalities=["IMAGE"],
             image_config=types.ImageConfig(image_size=size),
         )
 
@@ -118,6 +128,9 @@ class PaperComicGenerator:
             try:
                 logger.info(f"🔄 Attempt {attempt}/{MAX_RETRIES}")
                 
+                # 收集所有文本响应
+                text_responses = []
+                
                 for chunk in self.client.models.generate_content_stream(
                     model=self.model,
                     contents=contents,
@@ -130,35 +143,45 @@ class PaperComicGenerator:
                     ):
                         continue
                     
-                    part = chunk.candidates[0].content.parts[0]
+                    # 遍历所有 parts
+                    for part in chunk.candidates[0].content.parts:
+                        if part.inline_data and part.inline_data.data:
+                            # 保存图片
+                            inline_data = part.inline_data
+                            file_extension = mimetypes.guess_extension(inline_data.mime_type) or ".png"
+                            
+                            # 确保输出路径有正确的扩展名
+                            output_file = Path(output_path)
+                            if not output_file.suffix:
+                                output_file = output_file.with_suffix(file_extension)
+                            
+                            # 确保目录存在
+                            output_file.parent.mkdir(parents=True, exist_ok=True)
+                            
+                            # 写入文件
+                            with open(output_file, "wb") as f:
+                                f.write(inline_data.data)
+                            
+                            logger.info(f"✅ Comic saved to: {output_file}")
+                            return output_file
+                        
+                        # 收集文本响应
+                        if hasattr(part, 'text') and part.text:
+                            text_responses.append(part.text)
                     
-                    if part.inline_data and part.inline_data.data:
-                        # 保存图片
-                        inline_data = part.inline_data
-                        file_extension = mimetypes.guess_extension(inline_data.mime_type) or ".png"
-                        
-                        # 确保输出路径有正确的扩展名
-                        output_file = Path(output_path)
-                        if not output_file.suffix:
-                            output_file = output_file.with_suffix(file_extension)
-                        
-                        # 确保目录存在
-                        output_file.parent.mkdir(parents=True, exist_ok=True)
-                        
-                        # 写入文件
-                        with open(output_file, "wb") as f:
-                            f.write(inline_data.data)
-                        
-                        logger.info(f"✅ Comic saved to: {output_file}")
-                        return output_file
-                    else:
-                        # 文本响应（可能是错误或说明）
-                        if hasattr(chunk, 'text') and chunk.text:
-                            logger.debug(f"📝 Response text: {chunk.text}")
+                    # 也检查 chunk 级别的 text
+                    if hasattr(chunk, 'text') and chunk.text:
+                        text_responses.append(chunk.text)
+                
+                # 记录所有文本响应
+                full_text = ""
+                if text_responses:
+                    full_text = "\n".join(text_responses)
+                    logger.info(f"📝 API Response Text:\n{full_text[:2000]}")  # 限制长度
                 
                 # 如果循环结束但没有返回，说明没有生成图片
                 logger.warning(f"⚠️ Attempt {attempt}: No image generated, retrying...")
-                last_error = Exception("No image data in response")
+                last_error = Exception(f"No image data in response. Text: {full_text[:50] if full_text else 'None'}")
 
             except Exception as e:
                 last_error = e
