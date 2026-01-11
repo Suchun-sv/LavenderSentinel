@@ -1,7 +1,7 @@
 [project]
-name = "lavendersentinel"
+name = "whitenote"
 version = "0.1.0"
-description = "Add your description here"
+description = "像刷小红书一样刷论文 | Scroll through papers like you scroll through social media"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

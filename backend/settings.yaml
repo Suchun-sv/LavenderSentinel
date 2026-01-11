@@ -47,7 +47,7 @@ embedding_save_path: "cache/embeddings/"
 qdrant_database:
   host: "localhost"
   port: 6333
-  collection: "lavender_papers"
+  collection: "whitenote_papers"
 
 # Redis (for RQ task queue)
 redis:

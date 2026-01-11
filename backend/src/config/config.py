@@ -30,7 +30,7 @@ class SchedulerConfig(BaseModel):
 class QdrantConfig(BaseModel):
     host: Annotated[str, Field(default="localhost")]
     port: Annotated[int, Field(default=6333)]
-    collection: Annotated[str, Field(default="lavender_papers")]
+    collection: Annotated[str, Field(default="whitenote_papers")]
 
 class PdfDownloadConfig(BaseModel):
     max_concurrency: Annotated[int, Field(default=8)]
@@ -69,7 +69,7 @@ class Settings(BaseSettings):
     auto_ai_title: Annotated[bool, Field(default=True)]
     auto_ai_abstract: Annotated[bool, Field(default=True)]
 
-    database_url: Annotated[str, Field(default="postgresql://lavender:lavender_password@localhost:5432/lavender_sentinel")]
+    database_url: Annotated[str, Field(default="postgresql://whitenote:whitenote_password@localhost:5432/whitenote")]
 
     paper_save_path: Annotated[str, Field(default="cache/papers.json")]
     pdf_save_path: Annotated[str, Field(default="cache/pdfs/")]
