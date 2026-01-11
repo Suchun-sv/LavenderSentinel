@@ -12,29 +12,20 @@ class ArxivClient:
             num_retries=3,
         )
 
-    def search_papers(self, keywords: List[str], max_results: int = 100, sort_by: arxiv.SortCriterion = arxiv.SortCriterion.Relevance) -> Dict[str, List[Paper]]:
+    def search_papers(self, keywords: List[str], max_results: int = 100, sort_by: arxiv.SortCriterion = arxiv.SortCriterion.SubmittedDate) -> Dict[str, List[Paper]]:
         """
-        Result(
-        entry_id: str,
-        updated: datetime.datetime = datetime.datetime(1, 1, 1, 0, 0),
-        published: datetime.datetime = datetime.datetime(1, 1, 1, 0, 0),
-        title: str = '',
-        authors: list[Result.Author] | None = None,
-        summary: str = '',
-        comment: str = '',
-        journal_ref: str = '',
-        doi: str = '',
-        primary_category: str = '',
-        categories: list[str] | None = None,
-        links: list[Result.Link] | None = None,
-        _raw: feedparser.util.FeedParserDict | None = None
-    )
+        搜索论文，默认按提交时间排序，确保获取到最新的论文。
         """
         keywords_papers: Dict[str, List[Paper]] = {}
         for keyword in keywords:
+            # 如果关键词包含空格且没有引号，则包裹引号以进行精确匹配
+            query = keyword
+            if " " in keyword and not (keyword.startswith('"') and keyword.endswith('"')):
+                query = f'"{keyword}"'
+            
             keywords_papers[keyword] = []
             search_query = arxiv.Search(
-                query=keyword,
+                query=query,
                 max_results=max_results,
                 sort_by=sort_by,   
                 sort_order=arxiv.SortOrder.Descending,
