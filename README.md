@@ -196,7 +196,20 @@ tail -f logs/rq-worker.log
 
 ## 📄 License
 
-MIT License
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">
+  <img alt="Creative Commons License" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" />
+</a>
+
+This work is licensed under a [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+**您可以自由地：**
+- ✅ 共享 — 复制、发行本作品
+- ✅ 改编 — 修改、转换或基于本作品创作
+
+**但须遵守以下条件：**
+- 📝 署名 — 注明原作者
+- 🚫 非商业性使用 — 不得用于商业目的
+- 🔄 相同方式共享 — 衍生作品须采用相同许可证
 
 ---
 
